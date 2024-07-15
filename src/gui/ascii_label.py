@@ -44,6 +44,7 @@ class AsciiVideoPlayer(QWidget):
             if not ret:
                 break
             ascii_frame = self.ascii_frame_function(frame)
+            ascii_frame = ascii_frame.replace(" ", "\u00A0")
             self.frames_list.append(ascii_frame)
             logging.debug(f"Processing frame {len(self.frames_list)}")
             self.label.setText(progress_bar(len(self.frames_list), frames_count))
