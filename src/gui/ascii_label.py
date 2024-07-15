@@ -2,7 +2,7 @@ import logging
 import cv2 as cv
 from PySide6.QtCore import QTimer, Qt
 from PySide6.QtGui import QFont
-from PySide6.QtWidgets import QApplication, QLabel, QPushButton, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QApplication, QBoxLayout, QLabel, QProgressBar, QPushButton, QSlider, QVBoxLayout, QWidget
 from src.graphics.processing import frame_2_ascii
 
 class AsciiVideoPlayer(QWidget):
@@ -21,6 +21,8 @@ class AsciiVideoPlayer(QWidget):
         self.fps: float = 0
 
         self.label: QLabel = QLabel(self)
+        self.progress_bar = QProgressBar(self)
+        self.progress_bar.hide()
         self.label.setAlignment(Qt.AlignCenter)
         self.label.setText("Choose your video!")
 
@@ -32,13 +34,17 @@ class AsciiVideoPlayer(QWidget):
 
         layout: QVBoxLayout = QVBoxLayout(self)
         layout.addWidget(self.label)
+        layout.addWidget(self.progress_bar)
 
     def load_video(self) -> None:
-        self.label.setText("Processing video...")
         video = cv.VideoCapture(self.video_path)
         frames_count: int = int(video.get(cv.CAP_PROP_FRAME_COUNT))
         self.fps = video.get(cv.CAP_PROP_FPS) 
         logging.info("Starting frame processing")
+        self.label.setText("Processing video...")
+        self.progress_bar.setRange(0, int(frames_count // self.fps))
+        self.progress_bar.show()
+
         while video.isOpened():
             ret, frame = video.read()
             if not ret:
@@ -46,15 +52,16 @@ class AsciiVideoPlayer(QWidget):
             ascii_frame = self.ascii_frame_function(frame)
             ascii_frame = ascii_frame.replace(" ", "\u00A0")
             self.frames_list.append(ascii_frame)
+            if len(self.frames_list) % self.fps == 0:
+                self.progress_bar.setValue(self.progress_bar.value() + 1)
             logging.debug(f"Processing frame {len(self.frames_list)}")
-            self.label.setText(progress_bar(len(self.frames_list), frames_count))
-            QApplication.processEvents()
 
         video.release()
         logging.info("Finish frame processing")
         self.label.setFont(QFont("Courier", 5))
         if self.frames_list:
             print(f"The first frame is:\n'{self.frames_list[0]}'")
+            self.progress_bar.hide()
             self.label.setText(self.frames_list[0])
             self.play_button.setEnabled(True)
 
@@ -73,15 +80,3 @@ class AsciiVideoPlayer(QWidget):
             self.timer.stop()
             self.is_playing = False
             self.current_frame_idx = 0 # Reset to start
-
-
-def progress_bar(current: int, total: int, bar_length: int=20) -> str:
-    fraction: float = current / total
-
-    arrow = int(fraction * bar_length - 1) * '-' + '>'
-    padding = int(bar_length - len(arrow)) * ' '
-
-    ending = '\n' if current == total else '\r'
-
-    return f"Progress: [{arrow}{padding}] {int(fraction*100)}%" + ending
-
