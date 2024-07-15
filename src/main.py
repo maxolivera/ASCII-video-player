@@ -1,7 +1,11 @@
+import os
+import sys
 import argparse
 import logging
-import sys
 from PySide6.QtWidgets import QApplication
+
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from src.gui.video_player import App
 
 

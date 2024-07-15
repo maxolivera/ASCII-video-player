@@ -12,3 +12,6 @@ pyside6 = "*"
 
 [requires]
 python_version = "3.12"
+
+[scripts]
+run_debug = "python src/main.py -log=DEBUG"
