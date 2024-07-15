@@ -6,6 +6,7 @@ from PySide6.QtWidgets import QApplication
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+from src.gui.dark_theme import get_darkThemePalette
 from src.gui.video_player import App
 
 
@@ -18,6 +19,12 @@ def main():
         default="warning",
         help="Provide logging level. Example: -log=info",
     )
+    _ = parser.add_argument(
+        "-t",
+        "--theme",
+        default="W",
+        help="Provide theme. Either (B)lack or (W)hite. Example: -t=W",
+    )
 
     args = parser.parse_args()
 
@@ -29,6 +36,11 @@ def main():
     app = QApplication([])
 
     window = App()
+    if args.theme.upper() in ["B", "BLACK"]:
+        logger.info("Dark theme selected")
+        app.setPalette(get_darkThemePalette(app))
+    else:
+        logger.info("White theme selected")
 
     sys.exit(app.exec())
 
