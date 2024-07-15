@@ -2,17 +2,22 @@ import logging
 import cv2 as cv
 from PySide6.QtCore import QTimer, Qt
 from PySide6.QtGui import QFont
-from PySide6.QtWidgets import QApplication, QBoxLayout, QLabel, QProgressBar, QPushButton, QSlider, QVBoxLayout, QWidget
+from PySide6.QtWidgets import (
+    QLabel,
+    QProgressBar,
+    QPushButton,
+    QSlider,
+    QStyle,
+    QVBoxLayout,
+    QWidget,
+)
 from src.graphics.processing import frame_2_ascii
 
+
 class AsciiVideoPlayer(QWidget):
-    def __init__(
-            self,
-            button: QPushButton,
-            parent: QWidget|None = None
-        ) -> None:
+    def __init__(self, button: QPushButton, parent: QWidget | None = None) -> None:
         super().__init__(parent)
-        self.video_path:str = ""
+        self.video_path: str = ""
         self.ascii_frame_function = frame_2_ascii
 
         self.frames_list: list[str] = []
@@ -20,9 +25,16 @@ class AsciiVideoPlayer(QWidget):
         self.is_playing: bool = False
         self.fps: float = 0
 
-        self.label: QLabel = QLabel(self)
+        # Progress bar utilized when processing the video
         self.progress_bar = QProgressBar(self)
         self.progress_bar.hide()
+        # Slider to move over the video
+        self.slider = QSlider(Qt.Horizontal)
+        self.slider.hide()
+        self.slider.setRange(0,0)
+        self.slider.valueChanged.connect(self.set_position)
+        # Text label that shows the ASCII frame
+        self.label: QLabel = QLabel(self)
         self.label.setAlignment(Qt.AlignCenter)
         self.label.setText("Choose your video!")
 
@@ -34,12 +46,13 @@ class AsciiVideoPlayer(QWidget):
 
         layout: QVBoxLayout = QVBoxLayout(self)
         layout.addWidget(self.label)
+        layout.addWidget(self.slider)
         layout.addWidget(self.progress_bar)
 
     def load_video(self) -> None:
         video = cv.VideoCapture(self.video_path)
         frames_count: int = int(video.get(cv.CAP_PROP_FRAME_COUNT))
-        self.fps = video.get(cv.CAP_PROP_FPS) 
+        self.fps = video.get(cv.CAP_PROP_FPS)
         logging.info("Starting frame processing")
         self.label.setText("Processing video...")
         self.progress_bar.setRange(0, int(frames_count // self.fps))
@@ -50,7 +63,7 @@ class AsciiVideoPlayer(QWidget):
             if not ret:
                 break
             ascii_frame = self.ascii_frame_function(frame)
-            ascii_frame = ascii_frame.replace(" ", "\u00A0")
+            ascii_frame = ascii_frame.replace(" ", "\u00a0")
             self.frames_list.append(ascii_frame)
             if len(self.frames_list) % self.fps == 0:
                 self.progress_bar.setValue(self.progress_bar.value() + 1)
@@ -61,22 +74,38 @@ class AsciiVideoPlayer(QWidget):
         self.label.setFont(QFont("Courier", 5))
         if self.frames_list:
             print(f"The first frame is:\n'{self.frames_list[0]}'")
+
             self.progress_bar.hide()
+
+            self.slider.setRange(0, len(self.frames_list) + 1)
+            self.slider.show()
+
             self.label.setText(self.frames_list[0])
             self.play_button.setEnabled(True)
 
     def toggle_play(self) -> None:
         if self.is_playing:
             self.timer.stop()
+            self.play_button.setIcon(
+                    self.style().standardIcon(QStyle.SP_MediaPause)
+            )
         else:
             self.timer.start(int(1000 // self.fps))
+            self.play_button.setIcon(
+                    self.style().standardIcon(QStyle.SP_MediaPlay)
+            )
         self.is_playing = not self.is_playing
 
     def next_frame(self) -> None:
         if self.current_frame_idx < len(self.frames_list):
-            self.label.setText(self.frames_list[self.current_frame_idx])
             self.current_frame_idx += 1
         else:
-            self.timer.stop()
-            self.is_playing = False
-            self.current_frame_idx = 0 # Reset to start
+            self.current_frame_idx = 0  # Reset to start
+
+        self.label.setText(self.frames_list[self.current_frame_idx])
+        self.slider.setValue(self.current_frame_idx)
+
+    
+    def set_position(self, position: int) -> None:
+        self.label.setText(self.frames_list[position])
+        self.current_frame_idx = position
