@@ -3,6 +3,9 @@ import cv2 as cv
 import numpy as np
 from numpy.typing import NDArray
 
+EDGE_THRESHOLD = 0.8
+THRESHOLD_VALUE = 1.75
+
 EDGE_CHARS = {
     (337.5, 360): "-",
     (0, 22.5): "-",  # Horizontal line at near 0 or 360 degrees
@@ -15,7 +18,7 @@ EDGE_CHARS = {
     (292.5, 337.5): "\\",  # Positive diagonal
 }
 
-LUMINANCE_CHARS = " .:icoO?#■"
+LUMINANCE_CHARS = " .,:;iIPOB#■"
 
 
 def frame_2_ascii(frame: NDArray[...]) -> str:
@@ -38,14 +41,13 @@ def frame_2_ascii(frame: NDArray[...]) -> str:
 
     if logging.getLevelName(logger.getEffectiveLevel()) == "DEBUG":
         cv.imshow('resized_frame', resized_frame)
-        cv.waitKey(0)
+        _ = cv.waitKey(0)
     blur1 = cv.GaussianBlur(resized_frame, (5, 5), 0)
     blur2 = cv.GaussianBlur(resized_frame, (9, 9), 0)
 
     dog = cv.subtract(blur1, blur2)
 
-    threshold_value = 1.75
-    _, thresholded_dog = cv.threshold(dog, threshold_value, 255, cv.THRESH_BINARY)
+    _, thresholded_dog = cv.threshold(dog, THRESHOLD_VALUE, 255, cv.THRESH_BINARY)
 
     grad_x = cv.Scharr(thresholded_dog, cv.CV_32F, 1, 0)
     grad_y = cv.Scharr(thresholded_dog, cv.CV_32F, 0, 1)
@@ -61,12 +63,10 @@ def frame_2_ascii(frame: NDArray[...]) -> str:
 
     final_string = ""
 
-    edge_threshold = 1
-
     for y in range(new_height):
         for x in range(new_width):
             ascii_char = ""
-            if normalized_magnitude[y, x] > edge_threshold:
+            if normalized_magnitude[y, x] > EDGE_THRESHOLD:
                 ang = angle[y, x]
                 for (low, high), char in EDGE_CHARS.items():
                     if low <= ang <= high:
