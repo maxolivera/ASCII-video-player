@@ -18,7 +18,7 @@ EDGE_CHARS = {
     (292.5, 337.5): "\\",  # Positive diagonal
 }
 
-LUMINANCE_CHARS = " .,:;iIPOB#■"
+LUMINANCE_CHARS = "\u00A0.,:;iIPEOB#■■"
 
 
 def frame_2_ascii(frame: NDArray[...]) -> str:
@@ -52,12 +52,15 @@ def frame_2_ascii(frame: NDArray[...]) -> str:
     grad_x = cv.Scharr(thresholded_dog, cv.CV_32F, 1, 0)
     grad_y = cv.Scharr(thresholded_dog, cv.CV_32F, 0, 1)
 
-    magnitude = np.sqrt(grad_x**2, grad_y**2)
+    magnitude = np.sqrt(grad_x**2 + grad_y**2)
     angle = np.arctan2(grad_y, grad_x) * (180 / np.pi)
 
     angle = np.mod(angle + 360, 360)
 
-    normalized_magnitude = magnitude / magnitude.max()
+    if magnitude.max() == 0:
+        normalized_magnitude = np.zeros_like(magnitude)
+    else:
+        normalized_magnitude = magnitude / magnitude.max()
 
     normalized_luminance = resized_frame / 255
 
