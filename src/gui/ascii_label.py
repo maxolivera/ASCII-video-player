@@ -1,8 +1,10 @@
+from pathlib import Path
 import logging
 import cv2 as cv
 from PySide6.QtCore import QTimer, Qt
 from PySide6.QtGui import QFont
 from PySide6.QtWidgets import (
+    QApplication,
     QLabel,
     QProgressBar,
     QPushButton,
@@ -31,12 +33,16 @@ class AsciiVideoPlayer(QWidget):
         # Slider to move over the video
         self.slider = QSlider(Qt.Horizontal)
         self.slider.hide()
-        self.slider.setRange(0,0)
-        self.slider.valueChanged.connect(self.set_position)
+        self.slider.setRange(0, 0)
+        _ = self.slider.valueChanged.connect(self.set_position)
         # Text label that shows the ASCII frame
         self.label: QLabel = QLabel(self)
         self.label.setAlignment(Qt.AlignCenter)
         self.label.setText("Choose your video!")
+        # Title label that shows the name of the file
+        self.title: QLabel = QLabel(self)
+        self.title.hide()
+        self.title.setAlignment(Qt.AlignCenter)
 
         self.play_button = button
         _ = self.play_button.clicked.connect(self.toggle_play)
@@ -45,6 +51,7 @@ class AsciiVideoPlayer(QWidget):
         _ = self.timer.timeout.connect(self.next_frame)
 
         layout: QVBoxLayout = QVBoxLayout(self)
+        layout.addWidget(self.title)
         layout.addWidget(self.label)
         layout.addWidget(self.slider)
         layout.addWidget(self.progress_bar)
@@ -57,7 +64,6 @@ class AsciiVideoPlayer(QWidget):
         self.label.setText("Processing video...")
         self.progress_bar.setRange(0, int(frames_count // self.fps))
         self.progress_bar.show()
-
         while video.isOpened():
             ret, frame = video.read()
             if not ret:
@@ -76,6 +82,9 @@ class AsciiVideoPlayer(QWidget):
 
             self.progress_bar.hide()
 
+            self.title.setText(Path(self.video_path).name)
+            self.title.show()
+
             self.slider.setRange(0, len(self.frames_list) + 1)
             self.slider.show()
 
@@ -85,14 +94,10 @@ class AsciiVideoPlayer(QWidget):
     def toggle_play(self) -> None:
         if self.is_playing:
             self.timer.stop()
-            self.play_button.setIcon(
-                    self.style().standardIcon(QStyle.SP_MediaPause)
-            )
+            self.play_button.setIcon(self.style().standardIcon(QStyle.SP_MediaPause))
         else:
             self.timer.start(int(1000 // self.fps))
-            self.play_button.setIcon(
-                    self.style().standardIcon(QStyle.SP_MediaPlay)
-            )
+            self.play_button.setIcon(self.style().standardIcon(QStyle.SP_MediaPlay))
         self.is_playing = not self.is_playing
 
     def next_frame(self) -> None:
@@ -104,7 +109,6 @@ class AsciiVideoPlayer(QWidget):
         self.label.setText(self.frames_list[self.current_frame_idx])
         self.slider.setValue(self.current_frame_idx)
 
-    
     def set_position(self, position: int) -> None:
         self.label.setText(self.frames_list[position])
         self.current_frame_idx = position

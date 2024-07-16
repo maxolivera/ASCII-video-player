@@ -27,9 +27,9 @@ class App(QWidget):
 
     def __init_ui__(self):
         # Button to open video files
-        open_button = QPushButton()
-        open_button.setText("Choose a video!")
-        open_button.clicked.connect(self.open_file)
+        self.open_button = QPushButton()
+        self.open_button.setText("Choose a video!")
+        self.open_button.clicked.connect(self.open_file)
 
         # Button to play or pause video
         self.play_button = QPushButton()
@@ -42,7 +42,7 @@ class App(QWidget):
         # Create a Horitonal Box Layout for arraging widgets horizontally
         hbox_layout = QHBoxLayout()
         hbox_layout.setContentsMargins(0, 0, 0, 0)
-        hbox_layout.addWidget(open_button)
+        hbox_layout.addWidget(self.open_button)
         hbox_layout.addWidget(self.play_button)
 
         # Create a Vertical Box Layout for arragning widgets vertically
@@ -57,7 +57,10 @@ class App(QWidget):
         filename, _ = QFileDialog.getOpenFileName(
             self, caption="Open video", filter="Videos (*.mp4)"
         )
+        self.open_button.setEnabled(False)
         if filename != "":
             logging.info(f"File selected: '{filename}'")
+            self.asciiPlayer.frames_list.clear()
             self.asciiPlayer.video_path = filename
             _ = self.asciiPlayer.load_video()
+        self.open_button.setEnabled(True)

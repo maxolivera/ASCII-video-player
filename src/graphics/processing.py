@@ -18,7 +18,7 @@ EDGE_CHARS = {
     (292.5, 337.5): "\\",  # Positive diagonal
 }
 
-LUMINANCE_CHARS = "\u00A0.,:;iIPEOB#■■"
+LUMINANCE_CHARS = "\u00a0.,:;iIPEOB#■■"
 
 
 def frame_2_ascii(frame: NDArray[...]) -> str:
@@ -40,7 +40,7 @@ def frame_2_ascii(frame: NDArray[...]) -> str:
     )
 
     if logging.getLevelName(logger.getEffectiveLevel()) == "DEBUG":
-        cv.imshow('resized_frame', resized_frame)
+        cv.imshow("resized_frame", resized_frame)
         _ = cv.waitKey(0)
     blur1 = cv.GaussianBlur(resized_frame, (5, 5), 0)
     blur2 = cv.GaussianBlur(resized_frame, (9, 9), 0)
