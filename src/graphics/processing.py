@@ -3,7 +3,7 @@ import cv2 as cv
 import numpy as np
 from numpy.typing import NDArray
 
-EDGE_THRESHOLD = 0.8
+EDGE_THRESHOLD = 0.9
 THRESHOLD_VALUE = 1.75
 
 EDGE_CHARS = {
