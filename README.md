@@ -12,7 +12,7 @@ https://github.com/user-attachments/assets/f080046a-67b2-4180-a7d3-574013860853
 2. Run `pipenv install`
 3. Run `pipenv run src/main.py` [1]
 4. Choose your favorite video
-5. Wait that the video process
+5. Wait for the video to be processed
 6. Enjoy!
 
 [1] You can specify the following flag `-t=B` to run the app but with a _**night theme**_ (as shown in the example video).
